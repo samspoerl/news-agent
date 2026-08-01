@@ -4,7 +4,7 @@
   "description": "AI news agent",
   "private": true,
   "author": "Sam Spoerl",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
