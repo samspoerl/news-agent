@@ -2,7 +2,7 @@ import type { RssFeed } from '@/ingest/rss'
 
 /**
  * Render one RSS feed as a titled Markdown section for the corpus — deterministic,
- * so URLs never pass through a model. Shape mirrors prompt-tests/prompt1.md:
+ * so URLs never pass through a model. Shape:
  *
  *   ### [Feed Name](feed-url)
  *   _feed description_

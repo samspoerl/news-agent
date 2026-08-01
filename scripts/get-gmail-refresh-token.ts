@@ -12,8 +12,8 @@ import { OAuth2Client } from 'google-auth-library'
  *   - GMAIL_CLIENT_ID / GMAIL_CLIENT_SECRET set in .env (a Desktop-app OAuth
  *     client works with no redirect-URI registration; for a Web-application
  *     client, register `http://127.0.0.1:<REDIRECT_PORT>` as a redirect URI).
- *   - The agent account (yournewsagent@gmail.com) is a Test user on the consent
- *     screen, or the app is published to production.
+ *   - The agent account (the mailbox named by BRIEF_SENDER) is a Test user on the
+ *     consent screen, or the app is published to production.
  *
  * Run:  pnpm gmail:token
  * Then copy the printed token into .env (GMAIL_REFRESH_TOKEN) and your GitHub
@@ -116,8 +116,12 @@ async function main() {
 
     server.on('error', reject)
     server.listen(REDIRECT_PORT, () => {
+      // Name the account when .env already knows it — signing in as the wrong
+      // one is the easy mistake here, and it isn't obvious until mail goes out
+      // from the wrong address.
+      const agentAccount = process.env.BRIEF_SENDER
       console.log(
-        'Sign in as the AGENT account (yournewsagent@gmail.com) and approve access.'
+        `Sign in as the AGENT account${agentAccount ? ` (${agentAccount})` : ''} and approve access.`
       )
       console.log(
         'If you see "Google hasn’t verified this app", click Advanced → Go to … (unsafe).\n'
