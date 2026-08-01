@@ -37,7 +37,7 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "ai": "^7.0.37",
+    "ai": "^7.0.42",
     "google-auth-library": "^10.9.1",
     "marked": "^18.0.7",
     "prisma": "^7.9.0",
