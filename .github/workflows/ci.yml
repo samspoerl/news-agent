@@ -1,0 +1,79 @@
+name: CI
+
+# Catches regressions before they reach main and, from there, the daily cron:
+# prettier, `tsc --noEmit`, and the Vitest suite. Schema changes are deployed by
+# cd.yml; the agent itself runs from daily-brief.yml.
+on:
+  pull_request:
+  # Branch work is already checked on its PR, so the push trigger covers only
+  # main — the merge commit, or a direct push. Without the branch filter every
+  # PR commit would be checked twice, once per event.
+  push:
+    branches: [main]
+
+# One in-flight run per branch. A superseded PR run is cancelled since its result
+# is already stale; runs on main are left to finish.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Formatting fixes are pushed back to the branch rather than failing the
+    # build, so the job needs more than the repo's read-only default token.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # A pull_request run checks out a detached merge commit, which has
+          # nowhere to push. Name the head branch so a fix lands on the PR; on a
+          # push to main `ref_name` is already `main`.
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The generated client is gitignored, so it has to be built here. tsconfig
+      # covers every .ts in the repo and src/prisma.ts imports the client, so
+      # both tsc and the tests need it — as does prettier, whose organize-imports
+      # plugin drives the TypeScript language service and should see the same
+      # resolvable imports it sees locally.
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Run prettier
+        run: pnpm format
+
+      # Push the fix instead of failing the build: formatting is mechanical, and
+      # a red X over a quote style only costs a round trip. A push made with
+      # GITHUB_TOKEN deliberately starts no further workflow run, so the checks
+      # on a PR stay attached to the commit that was actually reviewed.
+      - name: Commit formatting fixes
+        run: |
+          if git diff --quiet; then
+            echo 'Already formatted.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit --all --message 'style: apply prettier formatting'
+          git push
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test

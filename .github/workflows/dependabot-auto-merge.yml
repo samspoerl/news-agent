@@ -1,0 +1,226 @@
+# Merges Dependabot PRs that are both (a) free of major/breaking bumps and
+# (b) green on CI. Runs on a schedule rather than on the PR event: a scheduled
+# sweep re-checks every open PR each day, so a PR that was still building
+# yesterday gets picked up today without needing a re-run.
+name: Dependabot scheduled auto-merge
+
+on:
+  schedule:
+    - cron: '0 14 * * *' # 14:00 UTC — ~10:00 ET (EDT) / 9:00 ET (EST)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Report what would merge, without merging'
+        type: boolean
+        # Defaults to true because a manual run is normally a test, and
+        # dispatch is only offered from the default branch — where the
+        # ref-based guard below would otherwise resolve straight to live.
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+  # `gh` resolves a check run's workflowName through checkSuite.workflowRun,
+  # which sits behind the `actions` scope. Without it the rollup query returns
+  # partial data plus per-node "Resource not accessible by integration" errors,
+  # gh treats that as a hard failure, and no PR ever resolves to a verdict.
+  actions: read
+
+concurrency:
+  group: dependabot-auto-merge
+  cancel-in-progress: false
+
+jobs:
+  merge-passing-dependabot-prs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Merge Dependabot PRs with green CI and no major bumps
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          # The workflow + job that constitute "CI passed". Matching on the
+          # workflow name rather than the job name means a future second job in
+          # ci.yml is required too, instead of being silently ignored.
+          CI_WORKFLOW: CI
+          CI_JOB: Checks
+          # Dry unless a scheduled run on main, or a dispatch that opted out.
+          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) || github.ref != 'refs/heads/main' }}
+        run: |
+          set -uo pipefail
+          # Actions runs this with `bash -e` by default; disable errexit so a
+          # single failing API call doesn't abort the whole loop.
+          set +e
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "::notice::Dry run — no PRs will be merged (ref is not main)"
+          fi
+
+          # Returns 0 (true) when a bump crosses a major version, or is a 0.x
+          # minor bump — in semver a 0.x minor is allowed to break.
+          is_breaking() {
+            local from="$1" to="$2"
+            local from_major="${from%%.*}" to_major="${to%%.*}"
+            if [ "$from_major" != "$to_major" ]; then
+              return 0
+            fi
+            if [ "$from_major" = "0" ]; then
+              local from_minor to_minor
+              from_minor=$(echo "$from" | cut -d. -f2)
+              to_minor=$(echo   "$to"   | cut -d. -f2)
+              if [ "${from_minor:-0}" != "${to_minor:-0}" ]; then
+                return 0
+              fi
+            fi
+            return 1
+          }
+
+          prs=$(gh pr list --repo "$REPO" --author 'app/dependabot' \
+            --state open --limit 100 \
+            --json number,title,body,isDraft,mergeable)
+
+          if [ "$(echo "$prs" | jq 'length')" -eq 0 ]; then
+            echo "No open Dependabot PRs."
+            exit 0
+          fi
+
+          echo '| PR | Versions | CI | Action |' >> "$GITHUB_STEP_SUMMARY"
+          echo '| --- | --- | --- | --- |'       >> "$GITHUB_STEP_SUMMARY"
+
+          # Loop in the current shell via process substitution rather than
+          # `... | while read`, which runs the body in a subshell and would
+          # discard the summary rows appended below.
+          while read -r pr; do
+            number=$(echo "$pr" | jq -r '.number')
+            title=$(echo  "$pr" | jq -r '.title')
+            body=$(echo   "$pr" | jq -r '.body // ""')
+            draft=$(echo  "$pr" | jq -r '.isDraft')
+            mergeable=$(echo "$pr" | jq -r '.mergeable')
+
+            echo "::group::PR #$number — $title"
+
+            if [ "$draft" = "true" ]; then
+              echo "Draft — skipping"
+              echo "| #$number | - | - | skipped (draft) |" >> "$GITHUB_STEP_SUMMARY"
+              echo "::endgroup::"
+              continue
+            fi
+
+            # Every version pair Dependabot states, read from the PR body rather
+            # than the title. A single-dependency PR puts one "Bumps X from A to
+            # B" line there; a grouped PR (see the `prisma` group in
+            # dependabot.yml) titles itself "bump the prisma group with N
+            # updates" with no versions at all, and lists one "Updates X from A
+            # to B" line per member. Reading the body handles both, and anchors
+            # to the line start so version strings inside embedded release notes
+            # aren't mistaken for bumps.
+            pairs=()
+            while IFS= read -r line; do
+              if [[ "$line" =~ from[[:space:]]+([0-9]+(\.[0-9]+)*)[[:space:]]+to[[:space:]]+([0-9]+(\.[0-9]+)*) ]]; then
+                pairs+=("${BASH_REMATCH[1]} ${BASH_REMATCH[3]}")
+              fi
+            done < <(printf '%s\n' "$body" | grep -E '^(Bumps|Updates) ')
+
+            if [ "${#pairs[@]}" -eq 0 ]; then
+              # Never merge on an unparsed body — a silent "no bumps found" must
+              # not read as "no major bumps found".
+              echo "Could not parse any version bump from the PR body — skipping"
+              echo "| #$number | unparsed | - | skipped (no versions) |" >> "$GITHUB_STEP_SUMMARY"
+              echo "::endgroup::"
+              continue
+            fi
+
+            breaking=''
+            for p in "${pairs[@]}"; do
+              from="${p%% *}"
+              to="${p##* }"
+              if is_breaking "$from" "$to"; then
+                echo "  $from -> $to (major/breaking)"
+                breaking="${breaking:+$breaking, }$from→$to"
+              else
+                echo "  $from -> $to (ok)"
+              fi
+            done
+
+            versions="${#pairs[@]} bump(s)"
+
+            if [ -n "$breaking" ]; then
+              echo "Major/breaking bump ($breaking) — leaving open for manual review"
+              echo "| #$number | $versions | - | skipped (major: $breaking) |" >> "$GITHUB_STEP_SUMMARY"
+              echo "::endgroup::"
+              continue
+            fi
+
+            # --- CI verdict (logic verified by the temporary probe) ---
+            rollup=$(gh pr view "$number" --repo "$REPO" --json statusCheckRollup \
+              --jq '.statusCheckRollup // []')
+
+            if [ -z "$rollup" ]; then
+              echo "Could not read the status rollup — leaving open"
+              echo "| #$number | $versions | ERROR | skipped (rollup unreadable) |" >> "$GITHUB_STEP_SUMMARY"
+              echo "::endgroup::"
+              continue
+            fi
+
+            # A re-run adds a second check run under the same name, so collapse
+            # to the newest per name before judging.
+            latest=$(echo "$rollup" | jq '
+              [ .[] | select(.__typename == "CheckRun") ]
+              | group_by(.name) | map(sort_by(.startedAt // "") | last)')
+
+            required=$(echo "$latest" | jq --arg wf "$CI_WORKFLOW" --arg job "$CI_JOB" '
+              [ .[] | select(.workflowName == $wf
+                             or ((.workflowName // "") == "" and .name == $job)) ]')
+
+            if [ "$(echo "$required" | jq 'length')" -eq 0 ]; then
+              # Distinct from "all checks green": a PR with no CI run at all
+              # would satisfy an all-green rule vacuously. It must not merge.
+              verdict='NO_CI'
+            elif echo "$required" | jq -e 'any(.status != "COMPLETED")' >/dev/null; then
+              verdict='PENDING'
+            elif echo "$required" | jq -e 'all(.conclusion == "SUCCESS")' >/dev/null; then
+              verdict='PASS'
+            else
+              verdict='FAIL'
+            fi
+
+            echo "Required CI ($CI_WORKFLOW): $verdict"
+
+            case "$verdict" in
+              PASS)
+                # Checked last: a conflicting PR can't merge regardless, but
+                # Dependabot rebases it on its own, so the next sweep retries.
+                if [ "$mergeable" = "CONFLICTING" ]; then
+                  echo "CI green but the branch conflicts — Dependabot will rebase; retrying next run"
+                  echo "| #$number | $versions | PASS | skipped (conflicting) |" >> "$GITHUB_STEP_SUMMARY"
+                elif [ "$DRY_RUN" = "true" ]; then
+                  echo "Would merge PR #$number (dry run)"
+                  echo "| #$number | $versions | PASS | would merge (dry run) |" >> "$GITHUB_STEP_SUMMARY"
+                else
+                  echo "Merging PR #$number"
+                  if gh pr merge "$number" --repo "$REPO" --merge; then
+                    echo "| #$number | $versions | PASS | merged |" >> "$GITHUB_STEP_SUMMARY"
+                  else
+                    echo "Merge failed for PR #$number"
+                    echo "| #$number | $versions | PASS | merge failed |" >> "$GITHUB_STEP_SUMMARY"
+                  fi
+                fi
+                ;;
+              PENDING)
+                echo "CI still running — will retry next scheduled run"
+                echo "| #$number | $versions | PENDING | left open |" >> "$GITHUB_STEP_SUMMARY"
+                ;;
+              FAIL)
+                echo "CI failed — leaving open for manual review"
+                echo "| #$number | $versions | FAIL | left open |" >> "$GITHUB_STEP_SUMMARY"
+                ;;
+              NO_CI)
+                echo "No CI run found for the head commit — leaving open"
+                echo "| #$number | $versions | NO_CI | left open |" >> "$GITHUB_STEP_SUMMARY"
+                ;;
+            esac
+
+            echo "::endgroup::"
+          done < <(echo "$prs" | jq -c '.[]')

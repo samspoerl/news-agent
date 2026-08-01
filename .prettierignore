@@ -1,0 +1,23 @@
+# Build output
+out/
+build/
+
+# Generated files
+src/generated/prisma
+prisma/migrations
+
+# Reference fixtures — kept verbatim (raw corpus / brief samples)
+prompt-tests/
+
+# Lockfiles
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+skills-lock.json
+
+# Coverage
+coverage/
+
+# Agents
+.agents/
+.claude/

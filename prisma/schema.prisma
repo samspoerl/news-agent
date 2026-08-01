@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SourceType {
+  RSS
+  NEWSLETTER
+
+  @@map("source_type")
+}
+
+// A news source: an RSS feed or a newsletter.
+model Source {
+  id            Int        @id @default(autoincrement())
+  type          SourceType
+  name          String
+  identifier    String // Feed URL for RSS; sender address for newsletters.
+  active        Boolean    @default(true) // Pipeline gate — mute a source without losing its history.
+  lastFetchedAt DateTime?  @map("last_fetched_at")
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  documents SourceDocument[]
+
+  @@unique([type, identifier])
+  @@map("sources")
+}
+
+// Which model call produced an AiCall row. Kept generic so a future review agent
+// slots in as another task.
+enum AiTask {
+  NEWSLETTER_CLEANUP
+  COMPOSE
+
+  @@map("ai_task")
+}
+
+// One source's contribution to one run: the raw feed/email and the cleaned
+// Markdown that went into that run's corpus. One row per source per brief (RSS:
+// one per feed; newsletters: one per email). No cross-run item dedup — a run is a
+// single atomic pass and dedup happens at compose time against recent briefs.
+//
+// `gmailMessageId` is a work-reuse key, not a uniqueness constraint: the same
+// email recurs across the lookback window, so a run looks up the most recent row
+// with a matching id and reuses its cleaned Markdown rather than re-paying the
+// cleanup model. `feedBuildDate` is RSS provenance only (was this feed stale?);
+// it is recorded but not used to skip or dedup.
+model SourceDocument {
+  id             Int       @id @default(autoincrement())
+  sourceId       Int       @map("source_id")
+  briefId        Int       @map("brief_id")
+  raw            String // Original RSS XML slice / newsletter HTML — kept for parser evals.
+  markdown       String // Cleaned Markdown fed into the corpus.
+  gmailMessageId String?   @map("gmail_message_id") // Newsletter reuse key; null for RSS.
+  feedBuildDate  DateTime? @map("feed_build_date") // RSS lastBuildDate/updated; null for newsletters.
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  source  Source   @relation(fields: [sourceId], references: [id])
+  brief   Brief    @relation(fields: [briefId], references: [id])
+  aiCalls AiCall[]
+
+  @@index([sourceId])
+  @@index([briefId])
+  @@index([gmailMessageId])
+  @@map("source_documents")
+}
+
+// One brief the agent sent. Stores the exact corpus fed to the composer so a run
+// is exactly replayable, and doubles as the cross-day dedup memory: recent
+// bodies are loaded as text so the composer won't repeat stories.
+//
+// `briefDate` is the day the brief covers; `sentAt` is when it actually went out.
+// They match for a scheduled run and diverge for a backfill (`--date`), which
+// reconstructs a missed day today. Dedup context is selected by `briefDate` so a
+// backfill reads the briefs that preceded its day, not whatever is newest.
+// Intentionally not unique: a same-day re-run stays possible, and the backfill
+// path guards against duplicating a date in code instead (see src/index.ts).
+model Brief {
+  id        Int      @id @default(autoincrement())
+  sender    String
+  recipient String
+  subject   String
+  body      String
+  corpus    String // The exact concatenated Markdown handed to the composer.
+  briefDate DateTime @map("brief_date") @db.Date
+  sentAt    DateTime @default(now()) @map("sent_at")
+
+  documents SourceDocument[]
+  aiCalls   AiCall[]
+
+  @@index([briefDate])
+  @@index([sentAt])
+  @@map("briefs")
+}
+
+// A versioned prompt. Append-only: a new version is a new row, so the current
+// prompt for a task is `orderBy [createdAt desc, id desc] take 1`. Lets the
+// instructions be tuned in the DB without shipping code; the code defaults (see
+// src/ai/instructions.ts) are seeded as the first version.
+model Instructions {
+  id        Int      @id @default(autoincrement())
+  task      AiTask
+  body      String // The AI SDK `instructions` (system) text.
+  note      String? // Optional annotation: why this version exists.
+  createdAt DateTime @default(now()) @map("created_at")
+
+  aiCalls AiCall[]
+
+  @@index([task, createdAt])
+  @@map("instructions")
+}
+
+// One model invocation, captured for evals: the parameters that shaped it and the
+// token usage it cost. References the exact Instructions version used. A cleanup
+// call points at its SourceDocument; a compose call points at its Brief.
+model AiCall {
+  id             Int      @id @default(autoincrement())
+  task           AiTask
+  model          String
+  reasoning      String? // The reasoning-effort param, when the model takes one.
+  instructionsId Int      @map("instructions_id")
+  inputTokens    Int?     @map("input_tokens")
+  outputTokens   Int?     @map("output_tokens")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  sourceDocumentId Int?            @map("source_document_id")
+  briefId          Int?            @map("brief_id")
+  instructions     Instructions    @relation(fields: [instructionsId], references: [id])
+  sourceDocument   SourceDocument? @relation(fields: [sourceDocumentId], references: [id])
+  brief            Brief?          @relation(fields: [briefId], references: [id])
+
+  @@index([task])
+  @@index([briefId])
+  @@index([sourceDocumentId])
+  @@index([instructionsId])
+  @@map("ai_calls")
+}

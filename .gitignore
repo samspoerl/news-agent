@@ -1,0 +1,16 @@
+# Dependencies
+**/node_modules
+
+# Env files
+.env*
+!.env.example
+!.env.docker
+
+# Typescript
+*.tsbuildinfo
+
+# Generated prisma client
+src/generated/prisma
+
+# Test prompt outputs
+prompt-tests/*.brief.md

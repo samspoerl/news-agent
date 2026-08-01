@@ -1,0 +1,56 @@
+name: CD
+
+# Applies committed Prisma migrations to the Neon database once they land on
+# main, so a schema change is live immediately instead of waiting for the next
+# daily run. daily-brief.yml runs `migrate deploy` too — that stays as the
+# catch-up path if this ever fails.
+on:
+  push:
+    branches: [main]
+    # `migrate deploy` only ever applies files under prisma/migrations, so
+    # nothing else on main can change its outcome. prisma.config.ts is listed
+    # because it supplies both the migrations path and the connection.
+    paths:
+      - 'prisma/migrations/**'
+      - 'prisma.config.ts'
+      - '.github/workflows/cd.yml'
+  # Manual runs from the Actions tab, for replaying a deploy that failed.
+  workflow_dispatch:
+
+# Never let two deploys race on the same database.
+concurrency:
+  group: cd-migrate
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Deploy migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Idempotent — only migrations the database hasn't recorded run, so a
+      # re-run after an interrupted deploy resumes where it stopped. A migration
+      # that actually failed mid-apply is a different case: it's recorded as
+      # failed, and every later deploy refuses to run (P3009) until it's cleared
+      # with `prisma migrate resolve`. Uses the direct, non-pooled connection.
+      - name: Apply pending migrations
+        run: pnpm exec prisma migrate deploy
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}

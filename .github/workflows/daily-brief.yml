@@ -1,0 +1,86 @@
+name: Daily brief
+
+# Runs the news agent once a day and emails the brief.
+on:
+  schedule:
+    - cron: '0 12 * * *' # 07:00 EST (mid-Nov to mid-Mar); 08:00 EDT the rest of the year
+  # Manual runs from the Actions tab. Leave `date` blank for a normal run; set it to
+  # rebuild a day whose scheduled run was missed (newsletters only — RSS feeds carry
+  # only current items, so a past day can't be recovered from them).
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Backfill date (YYYY-MM-DD); blank = today'
+        required: false
+        type: string
+
+# Never let two runs overlap (e.g. a manual run kicked off during a scheduled one).
+concurrency:
+  group: daily-brief
+  cancel-in-progress: false
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    # Compose runs a few minutes at high reasoning; cap the job well above that so a
+    # hung model call can't burn the 6-hour default of Actions minutes.
+    timeout-minutes: 10
+    env:
+      NODE_ENV: production
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The generated Prisma client is gitignored, so it must be built in CI.
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      # Catch-up path only — cd.yml applies migrations on merge to main. This
+      # exists so a failed or skipped deploy can't leave the daily run querying a
+      # schema the checked-out code doesn't match. Idempotent: nothing pending,
+      # nothing runs. Uses the direct, non-pooled connection.
+      - name: Apply pending migrations
+        run: pnpm exec prisma migrate deploy
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+      - name: Send the daily brief
+        # The date reaches the script through the environment, never interpolated
+        # into this command — a `${{ inputs.* }}` inside `run:` is a shell-injection
+        # vector. Expands to nothing at all when the input is blank.
+        #
+        # No `--` separator before the flag: pnpm forwards it to the script, where
+        # it terminates option parsing and used to discard `--date` entirely (#17).
+        # pnpm passes the flag through without one. The inner quotes survive the
+        # unquoted `${:+}` expansion, so a value with whitespace stays one argument.
+        run: pnpm start ${BRIEF_DATE:+--date "$BRIEF_DATE"}
+        env:
+          BRIEF_DATE: ${{ inputs.date }}
+          # Secrets — the sensitive credentials. The run throws if any is unset.
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+          GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+          # Required, but not sensitive — a public OAuth client id and two email
+          # addresses. Repo variables, not secrets; the run still throws if unset.
+          GMAIL_CLIENT_ID: ${{ vars.GMAIL_CLIENT_ID }}
+          BRIEF_SENDER: ${{ vars.BRIEF_SENDER }}
+          BRIEF_RECIPIENT: ${{ vars.BRIEF_RECIPIENT }}
+          # Optional overrides — set as repo variables to tune without editing this
+          # file; when unset they fall back to the code defaults.
+          COMPOSE_MODEL: ${{ vars.COMPOSE_MODEL }}
+          COMPOSE_FALLBACK_MODEL: ${{ vars.COMPOSE_FALLBACK_MODEL }}
+          COMPOSE_REASONING: ${{ vars.COMPOSE_REASONING }}
+          NEWSLETTER_CLEANUP_MODEL: ${{ vars.NEWSLETTER_CLEANUP_MODEL }}
+          NEWSLETTER_CLEANUP_REASONING: ${{ vars.NEWSLETTER_CLEANUP_REASONING }}

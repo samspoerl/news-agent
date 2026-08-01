@@ -1,0 +1,48 @@
+{
+  "name": "news-agent",
+  "version": "0.1.0",
+  "description": "AI news agent",
+  "private": true,
+  "author": "Sam Spoerl",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "start:dry": "tsx src/index.ts --dry-run",
+    "eval:compose": "tsx scripts/summarize-corpus.ts",
+    "instructions:get": "tsx scripts/instructions.ts get",
+    "instructions:set": "tsx scripts/instructions.ts set",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:seed": "prisma db seed",
+    "gmail:token": "tsx scripts/get-gmail-refresh-token.ts",
+    "gmail:check": "tsx scripts/check-gmail-token.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:changes": "tsx scripts/format-changes.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@prisma/adapter-neon": "^7.9.0",
+    "@prisma/adapter-pg": "^7.9.0",
+    "@prisma/client": "^7.9.0",
+    "@types/node": "^24.13.3",
+    "@types/turndown": "^5.0.6",
+    "dotenv": "^17.4.2",
+    "prettier": "^3.9.6",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "ai": "^7.0.37",
+    "google-auth-library": "^10.9.1",
+    "marked": "^18.0.7",
+    "prisma": "^7.9.0",
+    "rss-parser": "^3.13.0",
+    "turndown": "^7.2.4",
+    "zod": "^4.4.3"
+  }
+}
