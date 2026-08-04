@@ -2,8 +2,11 @@ name: Daily brief
 
 # Runs the news agent once a day and emails the brief.
 on:
-  schedule:
-    - cron: '0 12 * * *' # 07:00 EST (mid-Nov to mid-Mar); 08:00 EDT the rest of the year
+  # Disabled — the daily cron is off; the agent runs only when triggered manually.
+  # Kept here for reference (and to re-enable by uncommenting):
+  # schedule:
+  #   - cron: '0 12 * * *' # 07:00 EST (mid-Nov to mid-Mar); 08:00 EDT the rest of the year
+  #
   # Manual runs from the Actions tab. Leave `date` blank for a normal run; set it to
   # rebuild a day whose scheduled run was missed (newsletters only — RSS feeds carry
   # only current items, so a past day can't be recovered from them).
