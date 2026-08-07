@@ -39,7 +39,7 @@
   "dependencies": {
     "ai": "^7.0.48",
     "google-auth-library": "^10.9.1",
-    "marked": "^18.0.7",
+    "marked": "^18.0.9",
     "prisma": "^7.9.0",
     "rss-parser": "^3.13.0",
     "turndown": "^7.2.4",
