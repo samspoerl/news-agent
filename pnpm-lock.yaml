@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       ai:
-        specifier: ^7.0.51
-        version: 7.0.51(zod@4.4.3)
+        specifier: ^7.0.56
+        version: 7.0.56(zod@4.4.3)
       google-auth-library:
         specifier: ^10.9.1
         version: 10.9.1
@@ -66,20 +66,20 @@ importers:
 
 packages:
 
-  '@ai-sdk/gateway@4.0.40':
-    resolution: {integrity: sha512-poNySlk+zSe04M4v0wgJKt+mzY6Vk6abcQid58YZnFUBJYo6VwfsFUaW7oINoR1vYYB7Ne6eqY1doSxYKt0KDg==}
+  '@ai-sdk/gateway@4.0.44':
+    resolution: {integrity: sha512-dQ/AHH1do1iEpWEXdAge37FtpXV17fsj7NkL9w+xuzVgvmI7+dQFeDerul+F2I5czmxe61Lq+TnUREjU92UXYg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.20':
-    resolution: {integrity: sha512-9W8c2mXiGgbo9sBBT4ybEWF8znxla2CO8VTim8t5oCCLP4aDH4o6RvkHfwL/iLC6mEbO4a6LpS2FBbQHccU+ig==}
+  '@ai-sdk/provider-utils@5.0.23':
+    resolution: {integrity: sha512-mFvAAszenK8Xny3v+4Vntke5IcUkyzjss3gTBOxVWNrSIWmt/FhQ5gCgoJXW7IK11cklRaicMPwOXTnnBtaqFQ==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider@4.0.5':
-    resolution: {integrity: sha512-9WAerTaPU2jcVi8dh8x27tySEuLur1Kfg7Go74GuCmsC/2MDSvrTkrK8ZrXWjryEevKfcPPmO1enveE7eqlzoA==}
+  '@ai-sdk/provider@4.0.6':
+    resolution: {integrity: sha512-YYXjvs8F3q/BdEn9tBDoDuQACotfR7c5foGw/ADsM6iAVC1JabqEjQSkwHv/Kg2vNIr1c2AVHcQb+JYsYk76Qw==}
     engines: {node: '>=22'}
 
   '@electric-sql/pglite-socket@0.1.3':
@@ -780,8 +780,8 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  ai@7.0.51:
-    resolution: {integrity: sha512-yyxSDZmlpTZs2oepyjzHMXrPk0mJ2ITpw8TfXYiF53yo0WkQJ1qm6MbpUiYclh640D35nNJ8bq57RffSrX+Qzg==}
+  ai@7.0.56:
+    resolution: {integrity: sha512-Lp7q9tZFl/TGOpBBNgt2wZ85SoCvJJVlHQksMkqrgiFUnIGOw+L2FWJ0gXuNEngLQTp9+t32k8QuIB7Jc5uKRA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1193,8 +1193,8 @@ packages:
     resolution: {integrity: sha512-Tz09sEL2EEuv5fFowm419c1+a/jSMiBjI9gHxVLrVdbUkkNUUfjsVYs9pVZu5oCon/kmRh9TfLEObFtkVxmY0w==}
     engines: {node: '>=8.0.0'}
 
-  nanoid@3.3.17:
-    resolution: {integrity: sha512-xQLf0A3HOMlgHq0n247/LRuAOYmB7dXJ/DvAxGvsSBij45XtBSmQycu+F8ODbHwns/XyFZagyL1+J0Offw1E0g==}
+  nanoid@3.3.18:
+    resolution: {integrity: sha512-DTg4MJbGMWkfi6VZFdNt2/caMbQy4Ou+Op/hJQvGEWcnVfoA1QA+xzRKAzw9jD6+GVOOeYr/mIcuDSdug6F6+w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -1596,23 +1596,23 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/gateway@4.0.40(zod@4.4.3)':
+  '@ai-sdk/gateway@4.0.44(zod@4.4.3)':
     dependencies:
-      '@ai-sdk/provider': 4.0.5
-      '@ai-sdk/provider-utils': 5.0.20(zod@4.4.3)
+      '@ai-sdk/provider': 4.0.6
+      '@ai-sdk/provider-utils': 5.0.23(zod@4.4.3)
       '@vercel/oidc': 3.2.0
       zod: 4.4.3
 
-  '@ai-sdk/provider-utils@5.0.20(zod@4.4.3)':
+  '@ai-sdk/provider-utils@5.0.23(zod@4.4.3)':
     dependencies:
-      '@ai-sdk/provider': 4.0.5
+      '@ai-sdk/provider': 4.0.6
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.1.0
       undici: 7.29.0
       zod: 4.4.3
 
-  '@ai-sdk/provider@4.0.5':
+  '@ai-sdk/provider@4.0.6':
     dependencies:
       json-schema: 0.4.0
 
@@ -2202,11 +2202,11 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@7.0.51(zod@4.4.3):
+  ai@7.0.56(zod@4.4.3):
     dependencies:
-      '@ai-sdk/gateway': 4.0.40(zod@4.4.3)
-      '@ai-sdk/provider': 4.0.5
-      '@ai-sdk/provider-utils': 5.0.20(zod@4.4.3)
+      '@ai-sdk/gateway': 4.0.44(zod@4.4.3)
+      '@ai-sdk/provider': 4.0.6
+      '@ai-sdk/provider-utils': 5.0.23(zod@4.4.3)
       zod: 4.4.3
 
   ajv@8.20.0:
@@ -2592,7 +2592,7 @@ snapshots:
     dependencies:
       lru.min: 1.1.4
 
-  nanoid@3.3.17: {}
+  nanoid@3.3.18: {}
 
   node-domexception@1.0.0: {}
 
@@ -2659,7 +2659,7 @@ snapshots:
 
   postcss@8.5.26:
     dependencies:
-      nanoid: 3.3.17
+      nanoid: 3.3.18
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
