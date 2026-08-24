@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       ai:
-        specifier: ^7.0.66
-        version: 7.0.66(zod@4.4.3)
+        specifier: ^7.0.73
+        version: 7.0.73(zod@4.4.3)
       google-auth-library:
         specifier: ^10.9.1
         version: 10.9.1
@@ -66,14 +66,14 @@ importers:
 
 packages:
 
-  '@ai-sdk/gateway@4.0.52':
-    resolution: {integrity: sha512-SXUM8jzzuTUJRq+EOgPd5to6DSx0EKslVn+IVZHbUEX6k/3vCPNrvjckbK26HnNxHU/STxm+zTSJteqrO+7Z0w==}
+  '@ai-sdk/gateway@4.0.59':
+    resolution: {integrity: sha512-9MPyBBXU5snhuvqMa3OSOYtHP+wlyepJ+E0E+9lVNoxLGmi4sZqGeLbIxSYZeTf7qQ2xPshtfo5qDJHaOmAHvw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.27':
-    resolution: {integrity: sha512-EzAn4pdgG5g0xXtH6lE2zyNmfjDQIDjATkfqzuidEI35g++hh4+07vnjzkT/RmGmIClPZiRj/Q2GMPV2V7mkHw==}
+  '@ai-sdk/provider-utils@5.0.28':
+    resolution: {integrity: sha512-TnHUyd/rCYQqHg5RuiOaz/hUql6U+kbUaBW0Rp+0N5UhnAInA9CzzV0HXvuAAPwppDsK6fAx9Rd+tRawpJ/3pg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -780,8 +780,8 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  ai@7.0.66:
-    resolution: {integrity: sha512-wBUyoCYF3GVr+62nelBgR8YbpTSsMZrzFyOOjiwijylNSM2TFCW35C+Pml2vc59/WLMpyhS/LWZ55M+B9DAcSg==}
+  ai@7.0.73:
+    resolution: {integrity: sha512-rm2Rk68seeyhfgXl1JA/oaHcQHL018AfgydkJWx7Bgz0wGDHyvl30SnRIU2V7ZVR60A5K0SOLyP78EZmEJ2tOw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1596,14 +1596,14 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/gateway@4.0.52(zod@4.4.3)':
+  '@ai-sdk/gateway@4.0.59(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 4.0.7
-      '@ai-sdk/provider-utils': 5.0.27(zod@4.4.3)
+      '@ai-sdk/provider-utils': 5.0.28(zod@4.4.3)
       '@vercel/oidc': 3.2.0
       zod: 4.4.3
 
-  '@ai-sdk/provider-utils@5.0.27(zod@4.4.3)':
+  '@ai-sdk/provider-utils@5.0.28(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 4.0.7
       '@standard-schema/spec': 1.1.0
@@ -2202,11 +2202,11 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@7.0.66(zod@4.4.3):
+  ai@7.0.73(zod@4.4.3):
     dependencies:
-      '@ai-sdk/gateway': 4.0.52(zod@4.4.3)
+      '@ai-sdk/gateway': 4.0.59(zod@4.4.3)
       '@ai-sdk/provider': 4.0.7
-      '@ai-sdk/provider-utils': 5.0.27(zod@4.4.3)
+      '@ai-sdk/provider-utils': 5.0.28(zod@4.4.3)
       zod: 4.4.3
 
   ajv@8.20.0:
