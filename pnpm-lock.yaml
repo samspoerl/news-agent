@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       ai:
-        specifier: ^7.0.99
-        version: 7.0.99(zod@4.6.1)
+        specifier: ^7.0.101
+        version: 7.0.101(zod@4.6.1)
       google-auth-library:
         specifier: ^10.9.1
         version: 10.9.1
@@ -66,8 +66,8 @@ importers:
 
 packages:
 
-  '@ai-sdk/gateway@4.0.80':
-    resolution: {integrity: sha512-6t+07o8lSthpKf64Xb1qHWR2bWvJ3Fd2oFvS9fQc45p31bi2OUqan246e/ojAmZpWCiMPjKyQ4TBr4MYytnTiQ==}
+  '@ai-sdk/gateway@4.0.81':
+    resolution: {integrity: sha512-9TdKEg2l/qfaK7L4gC1FkrHNBrEXQjZSV3DvkRLCXkOSJTzojmarCn19ROWBbrlHqFVbW7OSOwQqz1n7ku9HQA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -786,8 +786,8 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  ai@7.0.99:
-    resolution: {integrity: sha512-Ov+3j/nSajaVH5hO8C94wN9wisG5tAJ8HWsLV9d/+nlzrRGUh3oYO3Kp1fRyUNWjAWLSpGLHLPaHCdfxb307Vg==}
+  ai@7.0.101:
+    resolution: {integrity: sha512-EOhih2g2Gu6TJdnkBojXORtNT6oZ6J4YeVeJhZXFO384ONLdXpPa+VPH183IMpSB8SkswQHTYRRoZ1tt+9Jt3Q==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1606,7 +1606,7 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/gateway@4.0.80(zod@4.6.1)':
+  '@ai-sdk/gateway@4.0.81(zod@4.6.1)':
     dependencies:
       '@ai-sdk/provider': 4.0.14
       '@ai-sdk/provider-utils': 5.0.40(zod@4.6.1)
@@ -2216,9 +2216,9 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@7.0.99(zod@4.6.1):
+  ai@7.0.101(zod@4.6.1):
     dependencies:
-      '@ai-sdk/gateway': 4.0.80(zod@4.6.1)
+      '@ai-sdk/gateway': 4.0.81(zod@4.6.1)
       '@ai-sdk/provider': 4.0.14
       '@ai-sdk/provider-utils': 5.0.40(zod@4.6.1)
       zod: 4.6.1
