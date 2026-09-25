@@ -200,7 +200,7 @@ jobs:
                   echo "| #$number | $versions | PASS | would merge (dry run) |" >> "$GITHUB_STEP_SUMMARY"
                 else
                   echo "Merging PR #$number"
-                  if gh pr merge "$number" --repo "$REPO" --merge; then
+                  if gh pr merge "$number" --repo "$REPO" --squash; then
                     echo "| #$number | $versions | PASS | merged |" >> "$GITHUB_STEP_SUMMARY"
                   else
                     echo "Merge failed for PR #$number"
