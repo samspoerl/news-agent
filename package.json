@@ -29,7 +29,7 @@
     "@prisma/client": "^7.10.0",
     "@types/node": "^24.13.3",
     "@types/turndown": "^5.0.6",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.0",
     "prettier": "^3.9.9",
     "prettier-plugin-organize-imports": "^4.3.0",
     "tsx": "^4.23.15",
