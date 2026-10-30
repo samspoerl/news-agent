@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "ai": "^7.0.154",
-    "google-auth-library": "^10.9.1",
+    "google-auth-library": "^11.3.1",
     "marked": "^18.1.2",
     "prisma": "^7.10.1",
     "rss-parser": "^3.13.0",
