@@ -24,8 +24,8 @@ importers:
         specifier: ^3.13.0
         version: 3.13.0
       turndown:
-        specifier: ^7.2.4
-        version: 7.2.4
+        specifier: ^7.2.5
+        version: 7.2.5
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -1449,8 +1449,8 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  turndown@7.2.4:
-    resolution: {integrity: sha512-I8yFsfRzmzK0WV1pNNOA4A7y4RDfFxPRxb3t+e3ui14qSGOxGtiSP6GjeX+Y6CHb7HYaFj7ECUD7VE5kQMZWGQ==}
+  turndown@7.2.5:
+    resolution: {integrity: sha512-EKZvCCFHh8sWttpAMs10U6niZFJ2cpz8LkCPlylxoG4JcHF50J7EHnnBW3AY1qXtUMu7kDjCp7dnggB1sIbqEQ==}
     engines: {node: '>=18', npm: '>=9'}
 
   typescript@7.0.2:
@@ -2808,7 +2808,7 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  turndown@7.2.4:
+  turndown@7.2.5:
     dependencies:
       '@mixmark-io/domino': 2.2.0
 
